@@ -6,7 +6,7 @@
 // TAD para uma lista linear simples, para armazenar ponteiros
 //   genéricos (os dados mantidos pela lista são void *)
 // 
-
+typedef struct _node Node;
 typedef struct _lista *Lista;
 
 // cria uma lista vazia

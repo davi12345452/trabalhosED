@@ -1,11 +1,11 @@
 #include "lista.h"
 #include <stdlib.h>
 
-typedef struct _node {
+struct _node {
   void *data;
   struct _node *prev;
   struct _node *next;
-} Node;
+};
 
 struct _lista {
   Node *head;
