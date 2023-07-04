@@ -2,18 +2,10 @@
 #include <string.h>
 #include <stdlib.h>
 
-// Implementação parcial do TAD Str, visto em aula
-// Não implementa suporte a UTF8
-
-// uma Str está sendo implementada como somente um ponteiro para a
-//   área que contém a string. Poderia manter outros dados aqui,
-//   para simplificar ou acelerar a implementação de alguma operação
-//   (tamanho da string, por exemplo)
 struct _str {
   char *bytes;
 };
 
-// função auxiliar que retorna o valor de 'a', ajustado entre min e max
 static int ajusta(int a, int min, int max)
 {
   if (a<min) return min;
@@ -68,11 +60,12 @@ void str_destroi(Str s)
   }
 }
 
+// Função auxiliar para contar o número de caracteres UTF-8 em uma string
 static int utf8_strlen(char *s)
 {
   int len = 0;
   while (*s != '\0') {
-    s += utf8_num_bytes(*s);
+    s += utf8_num_bytes(*s); //chama função de chu.h para manipulação de utf8
     len++;
   }
   return len;
@@ -81,7 +74,7 @@ static int utf8_strlen(char *s)
 int str_tam(Str s)
 {
   if (s == NULL) return 0;
-  return utf8_strlen(s->bytes); // Uso de utf8_strlen em vez de strlen
+  return utf8_strlen(s->bytes); // Uso de utf8_strlen em vez de strlen para poder manipular UTF-8 de chu.h
 }
 
 int str_numbytes(Str s)
@@ -100,25 +93,21 @@ chu str_char(Str s, int i)
   return chu_de_utf8(utf8_nesimo_chu(s->bytes, i));
 }
 
-// p é uma posição em s, podendo ser positiva (medida a partir do início)
-//   ou negativa (medida a partir do final)
-// n é o tamanho de uma substring a partir de p
-// esta função corrige p para ser positivo e estar em uma posição
-//   existente de s, e n para representar um tamanho válido em s
-static void ajeita_pos_e_tam_de_substr(Str s, int *p, int *n)
+
+// Acabei não precisando utilizar a função definida
+/*static void ajeita_pos_e_tam_de_substr(Str s, int *p, int *n)
 {
   int t = str_tam(s);
   if (*p < 0) {
-    // converte posições negativas no equivalente positivo
-    //   se p for -1, vira t; se for -2, vira t-1 etc
     *p = *p + t + 1;
   }
-  // faz p ficar nos limites da string (entre 0 e t)
-  *p = ajusta(*p, 0, t);  // este era o bug em aula, faltava ajustar p
-  // faz n ficar nos limites da string
+  
+  *p = ajusta(*p, 0, t);  
+ 
   *n = ajusta(*n, 0, t - *p);
-}
+}*/
 
+// Função auxiliar para obter o ponteiro para o enésimo caractere UTF-8 na string
 static char *utf8_char_pointer(char *s, int n) {
     int i = 0;
     while (*s != '\0' && i < n) {
@@ -128,13 +117,15 @@ static char *utf8_char_pointer(char *s, int n) {
     return s;
 }
 
+
+// Função para criar uma nova string contendo uma substring de 's'
 Str str_substr(Str s, int p, int n) {
     int tam = str_tam(s);
     p = ajusta(p, 0, tam);
     n = ajusta(n, 0, tam - p);
 
-    char *inicio = utf8_char_pointer(s->bytes, p); // Ponteiro para o início da substring
-    char *fim = utf8_char_pointer(inicio, n); // Ponteiro para o final da substring
+    char *inicio = utf8_char_pointer(s->bytes, p); 
+    char *fim = utf8_char_pointer(inicio, n); 
 
     int tam_bytes = fim - inicio;
     char *nova_bytes = malloc(tam_bytes + 1);
@@ -148,7 +139,7 @@ Str str_substr(Str s, int p, int n) {
 }
 
 
-// retorna a posição da primeira ocorrência do caractere 'c' em 's' ou -1
+
 int str_poschar(Str s, chu c)
 {
   int i = 0;
@@ -161,7 +152,7 @@ int str_poschar(Str s, chu c)
   return -1;
 }
 
-// retorna 'true' se as strings em 's' e 'o' forem iguais
+
 bool str_igual(Str s, Str o)
 {
   if (s == o) return true;
@@ -169,12 +160,7 @@ bool str_igual(Str s, Str o)
   return strcmp(s->bytes, o->bytes) == 0;
 }
 
-// altera 's', substituindo os 'n' caracteres a partir de 'p' pelo conteúdo de 'o'
-// valores negativos de 'n' são tratados como 0
-// se 'p' além do final de 's', deve ser tratado como logo após o final
-// se 'p' antes do início de 's', deve ser tratado cono logo antes do início
-// valores negativos de 'p' referem-se ao final de 's' (-1 é logo após o final de 's',
-//  -2 logo antes do último caractere, etc.)
+// Função para alterar uma substring de 's' pela string 'o'
 void str_altera(Str s, int p, int n, Str o) {
     if (s == NULL || o == NULL) return;
 
@@ -182,8 +168,8 @@ void str_altera(Str s, int p, int n, Str o) {
     p = ajusta(p, 0, tam);
     n = ajusta(n, 0, tam - p);
 
-    char *inicio = utf8_char_pointer(s->bytes, p); // Ponteiro para o início da substring
-    char *fim = utf8_char_pointer(inicio, n); // Ponteiro para o final da substring
+    char *inicio = utf8_char_pointer(s->bytes, p); 
+    char *fim = utf8_char_pointer(inicio, n); 
 
     int tam_bytes_esquerda = inicio - s->bytes;
     int tam_bytes_direita = strlen(fim);
@@ -233,3 +219,4 @@ void str_teste(void)
   assert(str_igual(s2, s3));
 }
 #endif
+
