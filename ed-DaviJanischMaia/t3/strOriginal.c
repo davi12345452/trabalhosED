@@ -68,20 +68,10 @@ void str_destroi(Str s)
   }
 }
 
-static int utf8_strlen(char *s)
-{
-  int len = 0;
-  while (*s != '\0') {
-    s += utf8_num_bytes(*s);
-    len++;
-  }
-  return len;
-}
-
 int str_tam(Str s)
 {
   if (s == NULL) return 0;
-  return utf8_strlen(s->bytes); // Uso de utf8_strlen em vez de strlen
+  return strlen(s->bytes);
 }
 
 int str_numbytes(Str s)
@@ -97,7 +87,7 @@ chu str_char(Str s, int i)
     i += t;
   }
   if (i >= t || i < 0) return -1;
-  return chu_de_utf8(utf8_nesimo_chu(s->bytes, i));
+  return s->bytes[i];
 }
 
 // p é uma posição em s, podendo ser positiva (medida a partir do início)
@@ -119,44 +109,38 @@ static void ajeita_pos_e_tam_de_substr(Str s, int *p, int *n)
   *n = ajusta(*n, 0, t - *p);
 }
 
-static char *utf8_char_pointer(char *s, int n) {
-    int i = 0;
-    while (*s != '\0' && i < n) {
-        s += utf8_num_bytes(*s);
-        i++;
-    }
-    return s;
-}
+Str str_substr(Str s, int p, int n)
+{
+  // cria uma nova Str para conter a substring
+  Str sub = malloc(sizeof(struct _str));
+  if (sub == NULL) return NULL;
 
-Str str_substr(Str s, int p, int n) {
-    int tam = str_tam(s);
-    p = ajusta(p, 0, tam);
-    n = ajusta(n, 0, tam - p);
+  // corrige p e n para ficarem nos limites de s
+  ajeita_pos_e_tam_de_substr(s, &p, &n);
 
-    char *inicio = utf8_char_pointer(s->bytes, p); // Ponteiro para o início da substring
-    char *fim = utf8_char_pointer(inicio, n); // Ponteiro para o final da substring
+  // aloca memória para os n caracteres mais o '\0'
+  sub->bytes = malloc(sizeof(char)*(n+1));
+  if (sub->bytes == NULL) {
+    free(sub);
+    return NULL;
+  }
 
-    int tam_bytes = fim - inicio;
-    char *nova_bytes = malloc(tam_bytes + 1);
+  // copia n bytes, a partir da posição p de s para sub
+  strncpy(sub->bytes, s->bytes + p, n);
+  // põe o terminador no final de sub
+  sub->bytes[n] = '\0';
 
-    strncpy(nova_bytes, inicio, tam_bytes);
-    nova_bytes[tam_bytes] = '\0';
-
-    Str nova_str = str_cria(nova_bytes);
-    free(nova_bytes);
-    return nova_str;
+  return sub;
 }
 
 
 // retorna a posição da primeira ocorrência do caractere 'c' em 's' ou -1
 int str_poschar(Str s, chu c)
 {
-  int i = 0;
-  char *ptr = s->bytes;
-  while (*ptr != '\0') {
-    if (chu_de_utf8(ptr) == c) return i;
-    ptr += utf8_num_bytes(*ptr);
-    i++;
+  for (int i=0; ; i++) {
+    int ci = str_char(s, i);
+    if (ci == '\0') break;
+    if (ci == c) return i;
   }
   return -1;
 }
@@ -175,29 +159,35 @@ bool str_igual(Str s, Str o)
 // se 'p' antes do início de 's', deve ser tratado cono logo antes do início
 // valores negativos de 'p' referem-se ao final de 's' (-1 é logo após o final de 's',
 //  -2 logo antes do último caractere, etc.)
-void str_altera(Str s, int p, int n, Str o) {
-    if (s == NULL || o == NULL) return;
+void str_altera(Str s, int p, int n, Str o)
+{
+  // corrige p e n para ficarem nos limites de s
+  ajeita_pos_e_tam_de_substr(s, &p, &n);
 
-    int tam = str_tam(s);
-    p = ajusta(p, 0, tam);
-    n = ajusta(n, 0, tam - p);
+  // calcula alguns tamanhos
+  int tam_org = str_tam(s);
+  int tam_ini = p;           // caracteres a copiar do início de s
+  int tam_ins = str_tam(o);  // caracteres a copiar de o
+  int tam_fim = tam_org - tam_ini - n; // caracteres do final de s
+  int tam_novo = tam_ini + tam_ins + tam_fim;
 
-    char *inicio = utf8_char_pointer(s->bytes, p); // Ponteiro para o início da substring
-    char *fim = utf8_char_pointer(inicio, n); // Ponteiro para o final da substring
+  // aloca memória para a string resultante
+  char *b = malloc(tam_novo+1);
+  if (b == NULL) {
+    return;  // xi, quem chama não tem como saber que deu errado
+  }
+  // copia tam_novo bytes para a nova região:
+  //   tam_ini bytes do início de s
+  //   tam_ins bytes de o e
+  //   tam_fim bytes do final de s
+  strncpy(b, s->bytes, tam_ini);
+  strncpy(b+tam_ini, o->bytes, tam_ins);
+  strncpy(b+tam_ini+tam_ins, s->bytes+tam_ini+n, tam_fim);
+  b[tam_novo] = '\0';
 
-    int tam_bytes_esquerda = inicio - s->bytes;
-    int tam_bytes_direita = strlen(fim);
-    int tam_bytes_o = strlen(o->bytes);
-
-    char *nova_bytes = malloc(tam_bytes_esquerda + tam_bytes_o + tam_bytes_direita + 1);
-
-    strncpy(nova_bytes, s->bytes, tam_bytes_esquerda);
-    strncpy(nova_bytes + tam_bytes_esquerda, o->bytes, tam_bytes_o);
-    strncpy(nova_bytes + tam_bytes_esquerda + tam_bytes_o, fim, tam_bytes_direita);
-    nova_bytes[tam_bytes_esquerda + tam_bytes_o + tam_bytes_direita] = '\0';
-
-    free(s->bytes);
-    s->bytes = nova_bytes;
+  // substitui a string original
+  free(s->bytes);
+  s->bytes = b;
 }
 
 void str_cstring(Str s, char *p)
