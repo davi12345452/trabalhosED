@@ -1,2 +1,0 @@
-Menor caminho de 2 para 10: 10 9 8 7 6 2 
-Distância total: 0.42

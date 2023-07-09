@@ -13,7 +13,7 @@ Grafo g_cria(int n, bool orientado) {
   }
   g->aresta_atual = 0;
   g->vertice_atual = 0;
-  g->proximo_id = 1; // Inicialize próximo_id como 1
+  g->proximo_id = 1; 
   return g;
 }
 

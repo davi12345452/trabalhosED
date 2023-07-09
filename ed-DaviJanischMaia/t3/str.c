@@ -94,19 +94,6 @@ chu str_char(Str s, int i)
 }
 
 
-// Acabei não precisando utilizar a função definida
-/*static void ajeita_pos_e_tam_de_substr(Str s, int *p, int *n)
-{
-  int t = str_tam(s);
-  if (*p < 0) {
-    *p = *p + t + 1;
-  }
-  
-  *p = ajusta(*p, 0, t);  
- 
-  *n = ajusta(*n, 0, t - *p);
-}*/
-
 // Função auxiliar para obter o ponteiro para o enésimo caractere UTF-8 na string
 static char *utf8_char_pointer(char *s, int n) {
     int i = 0;

@@ -53,7 +53,7 @@ void liberarLocais(Local lista) {
 }
 
 Local lerLocaisDoArquivo(char *nomeArquivo) {
-  int id_counter = 0; // mover o contador de IDs para cá
+  int id_counter = 0;
   FILE *arquivo = fopen(nomeArquivo, "r");
   if (arquivo == NULL) {
     printf("Erro ao abrir o arquivo %s\n", nomeArquivo);
@@ -65,27 +65,24 @@ Local lerLocaisDoArquivo(char *nomeArquivo) {
 
   while (fgets(linha, sizeof(linha), arquivo) != NULL) {
     if (linha[0] == '#' || linha[0] == '\n') {
-      continue; // Ignora linhas com # ou em branco
+      continue;
     }
 
-    // Faz o parsing dos dados da linha
     char codigo[5];
     double latitude, longitude;
-    char descricao[100] = ""; // inicializa descricao como vazio
+    char descricao[100] = ""; 
 
     char *first_comma = strchr(linha, ',');
     char *second_comma = first_comma ? strchr(first_comma + 1, ',') : NULL;
     char *third_comma = second_comma ? strchr(second_comma + 1, ',') : NULL;
 
     if (third_comma) {
-      // Caso tenha descrição
       if (sscanf(linha, "%[^,],%lf,%lf,%[^\n]", codigo, &latitude, &longitude,
                  descricao) < 4) {
         printf("Erro ao ler a linha do arquivo: %s\n", linha);
         continue;
       }
     } else {
-      // Caso não tenha descrição
       if (sscanf(linha, "%[^,],%lf,%lf", codigo, &latitude, &longitude) < 3) {
         printf("Erro ao ler a linha do arquivo: %s\n", linha);
         continue;
@@ -94,7 +91,7 @@ Local lerLocaisDoArquivo(char *nomeArquivo) {
 
     Local novoLocal = criarLocal(
         id_counter++, codigo, latitude, longitude,
-        descricao); // Passa id_counter como argumento para criarLocal
+        descricao);
     lista = adicionarLocal(lista, novoLocal);
   }
 
@@ -122,10 +119,9 @@ Local local_procura_id(Local local, int id) {
     }
     cursor = cursor->proximo;
   }
-  return NULL; // Retorna NULL se o id não foi encontrado.
+  return NULL;
 }
 
-// Função auxiliar para verificar se um número está em um array.
 int estaNoArray(int numero, int *array, int tamanho) {
   for (int i = 0; i < tamanho; i++) {
     if (array[i] == numero) {
@@ -147,7 +143,7 @@ void imprimirLocais(Local lista) {
     atual = atual->proximo;
   }
 }
-// Função para imprimir locais com base em um array de IDs.
+
 Local criarListaPorIds(Local lista, int *ids, int tamanho) {
   Local novaLista = NULL;
   for (int i = 0; i < tamanho; i++) {
@@ -158,6 +154,18 @@ Local criarListaPorIds(Local lista, int *ids, int tamanho) {
                                 local->longitude, local->descricao));
     }
   }
-  imprimirLocais(novaLista);
   return novaLista;
+}
+
+int buscaLocalID(Local lista, char *codigo) {
+  Local temp = lista;
+
+  while (temp) {
+    if (strcmp(temp->codigo, codigo) == 0) {
+      return temp->id;
+    }
+    temp = temp->proximo;
+  }
+
+  return -1;
 }

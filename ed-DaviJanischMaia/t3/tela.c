@@ -146,7 +146,7 @@ int tela_le_char(void)
       case '\n':
       case '\r':            return c_enter;
       case KEY_SAVE:
-      case CTRL('w'):       return c_save;
+      case CTRL('z'):       return c_save;
       case KEY_OPEN:
       case CTRL('o'):       return c_open;
       case KEY_CLOSE:

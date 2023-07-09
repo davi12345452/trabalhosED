@@ -1,13 +1,10 @@
-//Funcionando
-#include "caminho.h"
-#include "grafo.h"
-#include "local.h"
-#include <float.h>
-#include <limits.h>
+#include "dijkstra.h"
 #include <stdbool.h>
+#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+// Encontra o índice do vértice com a menor distância não visitado
 int encontrarMenorDistancia(double *distancias, bool *visitados,
                             int n_vertices) {
   double min = DBL_MAX;
@@ -23,23 +20,21 @@ int encontrarMenorDistancia(double *distancias, bool *visitados,
   return indice_min;
 }
 
-// Função que implementa o algoritmo de Dijkstra
-void dijkstra(Grafo grafo, int origem, int destino) {
-  int n_vertices = grafo->n_vertices;
-  bool *visitados = malloc(n_vertices * sizeof(bool));
-  double *distancias = malloc(n_vertices * sizeof(double));
-  int *anteriores = malloc(n_vertices * sizeof(int));
-
-  // Inicialização das estruturas auxiliares
+// Inicializa as estruturas auxiliares necessárias para o algoritmo de Dijkstra
+static void inicializarEstruturasAuxiliares(int n_vertices, double *distancias,
+                                     bool *visitados, int *anteriores) {
   for (int i = 0; i < n_vertices; i++) {
     distancias[i] = DBL_MAX;
     visitados[i] = false;
     anteriores[i] = -1;
   }
+}
 
+// Executa o algoritmo de Dijkstra para encontrar as menores distâncias
+static void executarDijkstra(Grafo grafo, double *distancias, bool *visitados,
+                      int *anteriores, int origem, int n_vertices) {
   distancias[origem] = 0;
 
-  // Execução do algoritmo de Dijkstra
   for (int count = 0; count < n_vertices - 1; count++) {
     int u = encontrarMenorDistancia(distancias, visitados, n_vertices);
     visitados[u] = true;
@@ -55,21 +50,115 @@ void dijkstra(Grafo grafo, int origem, int destino) {
       }
     }
   }
+}
 
-  // Impressão do menor caminho encontrado
-  printf("Menor caminho de %d para %d: ", origem, destino);
+// Constrói uma estrutura de visita com base nos resultados do algoritmo de Dijkstra
+static void construirVisita(int *caminho, int tamanho_caminho, int destino,
+                     double *distancias, int *anteriores, Visita *visita) {
   int atual = destino;
   while (atual != -1) {
-    printf("%d ", atual);
+    caminho[tamanho_caminho] = atual;
+    tamanho_caminho++;
     atual = anteriores[atual];
   }
 
-  printf("\nDistância total: %.2lf\n", distancias[destino]);
+  for (int i = 0; i < tamanho_caminho / 2; i++) {
+    int temp = caminho[i];
+    caminho[i] = caminho[tamanho_caminho - i - 1];
+    caminho[tamanho_caminho - i - 1] = temp;
+  }
+
+  visita->peso = distancias[destino];
+  visita->caminho = caminho;
+  visita->tamanho = tamanho_caminho;
 }
 
-int main() {
-  Local locais = lerLocaisDoArquivo("locais.csv");
-  Grafo caminho = caminho_cria("caminhos.csv", locais);
+// Implementa o algoritmo de Dijkstra para encontrar o caminho mínimo entre dois vértices
+Visita dijkstra(Grafo grafo, int origem, int destino) {
+  int n_vertices = grafo->n_vertices;
+  bool *visitados = malloc(n_vertices * sizeof(bool));
+  double *distancias = malloc(n_vertices * sizeof(double));
+  int *anteriores = malloc(n_vertices * sizeof(int));
 
-  dijkstra(caminho, 3, 33);
+  inicializarEstruturasAuxiliares(n_vertices, distancias, visitados,
+                                  anteriores);
+  executarDijkstra(grafo, distancias, visitados, anteriores, origem,
+                   n_vertices);
+
+  int *caminho = malloc(n_vertices * sizeof(int));
+  int tamanho_caminho = 0;
+
+  Visita visita;
+  construirVisita(caminho, tamanho_caminho, destino, distancias, anteriores,
+                  &visita);
+
+  free(visitados);
+  free(distancias);
+  free(anteriores);
+
+  return visita;
 }
+
+// Imprime o caminho encontrado pelo algoritmo de Dijkstra
+void imprimirCaminho(Visita visita) {
+  printf("Menor caminho: ");
+  for (int i = 0; i < visita.tamanho; i++) {
+    printf("%d ", visita.caminho[i]);
+  }
+  printf("\nDistância total: %.2lf\n", visita.peso);
+}
+
+// Adaptação do algoritmo de Dijkstra para encontrar o caminho mínimo passando por uma lista de vértices
+Visita dijkstraAdaptado(Grafo grafo, int *ids, int n_ids) {
+  bool *visitados = malloc(n_ids * sizeof(bool));
+  for (int i = 0; i < n_ids; i++)
+    visitados[i] = false;
+
+  int atual = ids[0];
+  visitados[0] = true;
+
+  Visita visitaFinal;
+  visitaFinal.peso = 0.0;
+  visitaFinal.tamanho = 1;
+  visitaFinal.caminho = malloc(n_ids * grafo->n_vertices * sizeof(int));
+  visitaFinal.caminho[0] = atual;
+
+  while (visitaFinal.tamanho < n_ids * grafo->n_vertices) {
+    double minDist = DBL_MAX;
+    int minIdx = -1;
+
+    for (int i = 0; i < n_ids; i++) {
+      if (!visitados[i]) {
+        Visita visitaAtual = dijkstra(grafo, atual, ids[i]);
+        if (visitaAtual.peso < minDist) {
+          minDist = visitaAtual.peso;
+          minIdx = i;
+        }
+        free(visitaAtual.caminho);
+      }
+    }
+
+    if (minIdx != -1) {
+      Visita visitaAtual = dijkstra(grafo, atual, ids[minIdx]);
+      for (int j = 1; j < visitaAtual.tamanho; j++) {
+        visitaFinal.caminho[visitaFinal.tamanho] = visitaAtual.caminho[j];
+        visitaFinal.tamanho++;
+      }
+      visitaFinal.peso += visitaAtual.peso;
+      free(visitaAtual.caminho);
+
+      atual = ids[minIdx];
+      visitados[minIdx] = true;
+    } else {
+      break;
+    }
+  }
+
+  free(visitados);
+
+  visitaFinal.caminho = realloc(visitaFinal.caminho, visitaFinal.tamanho * sizeof(int));
+
+  return visitaFinal;
+}
+
+
