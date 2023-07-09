@@ -3,8 +3,25 @@
 
 #include <stdbool.h>
 
-typedef struct _grafo *Grafo;
 typedef struct _aresta *Aresta;
+typedef struct _grafo *Grafo;
+
+struct _aresta{
+    int id;
+    int origem;
+    int destino;
+    double peso;
+};
+
+struct _grafo{
+    int n_vertices;
+    bool orientado;
+    Aresta **matriz_adj;
+    int aresta_atual;
+    int vertice_atual;
+    int proximo_id; // Inclua o próximo_id aqui
+};
+
 
 // aloca e inicializa um grafo com n vértices
 // o grafo pode ser orientado ou não (afeta o processamento das arestas)
