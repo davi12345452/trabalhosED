@@ -4,15 +4,6 @@
 // Definição do tipo de dado 'Local' como um ponteiro para uma estrutura _local
 typedef struct _local *Local;
 
-// Definição da estrutura _local que representa um local
-struct _local {
-    int id;                 
-    char codigo[5];         
-    double latitude;       
-    double longitude;       
-    char* descricao;        
-    struct _local* proximo;
-};
 
 // Função para criar um novo local com os dados fornecidos
 Local criarLocal(int id, char* codigo, double latitude, double longitude, char* descricao);
@@ -40,5 +31,14 @@ Local criarListaPorIds(Local lista, int *ids, int tamanho);
 
 // Função para buscar o id de um local na lista de locais pelo seu código
 int buscaLocalID(Local lista, char *codigo);
+
+/*
+    Funções para manipular o TAD sem quebrá-lo em outros arquivos,
+*/
+char* local_getDescricao(Local local);
+double local_getLatitude(Local local);
+double local_getLongitude(Local local);
+int local_getId(Local local);
+Local local_getProximo(Local local);
 
 #endif

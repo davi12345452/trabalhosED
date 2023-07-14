@@ -5,8 +5,15 @@
 #include "local.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // Escreve o código BBMap com as informações dos locais em um arquivo de saída
+
+/*
+  Realizei algumas modificações aqui. Eu estava quebrando o TAD local, por isso, utilizei
+  as funções de retirar os dados e de chamar o próximo item da lista. Além disso, modifiquei
+  os ; que não estavam muito corretos. 
+*/
 void escreverBBMapCode(Local lista, char *arquivoSaida) {
   FILE *saida = fopen(arquivoSaida, "w");
 
@@ -14,37 +21,38 @@ void escreverBBMapCode(Local lista, char *arquivoSaida) {
     printf("Não foi possível abrir o arquivo de saída: %s\n", arquivoSaida);
     return;
   }
-
   fprintf(saida, "[map]\n");
 
   Local temp = lista;
   int contador = 0;
-
   while (temp) {
+    int id = local_getId(temp);
+    double latitude = local_getLatitude(temp), longitude = local_getLongitude(temp);
+    char  *descricao = local_getDescricao(temp);
     if (contador == 0) {
-      if (temp->descricao && temp->descricao[0] != '\0') {
-        fprintf(saida, "%.5f,%.5f(%s);\n", temp->latitude, temp->longitude,
-                temp->descricao);
-        fprintf(saida, "%.5f,%.5f ", temp->latitude, temp->longitude);
+      if (descricao && descricao[0] != '\0') {
+        fprintf(saida, "%.5f,%.5f(%s);\n", latitude, longitude,
+                descricao);
+        fprintf(saida, "%.5f,%.5f ", latitude, longitude);
       }
     }
-
-    else if (temp->proximo == NULL) {
-      if (temp->descricao && temp->descricao[0] != '\0') {
-        fprintf(saida, "%.5f,%.5f;", temp->latitude, temp->longitude);
-        fprintf(saida, "\n%.5f,%.5f(%s)", temp->latitude, temp->longitude,
-                temp->descricao);
+    
+    else if (local_getProximo(temp) == NULL) {
+      if (descricao && descricao[0] != '\0') {
+        fprintf(saida, "%.5f,%.5f;", latitude, longitude);
+        fprintf(saida, "\n%.5f,%.5f(%s)", latitude, longitude,
+                descricao);
       }
     }
-    else if (temp->descricao && temp->descricao[0] != '\0') {
-      fprintf(saida, "%.5f,%.5f;", temp->latitude, temp->longitude);
-      fprintf(saida, "\n%.5f,%.5f(%s);\n", temp->latitude, temp->longitude,
-              temp->descricao);
-      fprintf(saida, "%.5f,%.5f ", temp->latitude, temp->longitude);
+    else if (descricao && descricao[0] != '\0') {
+      fprintf(saida, "%.5f,%.5f;", latitude, longitude);
+      fprintf(saida, "\n%.5f,%.5f(%s);\n", latitude, longitude,
+              descricao);
+      fprintf(saida, "%.5f,%.5f ", latitude, longitude);
     } else {
-      fprintf(saida, "%.5f,%.5f ", temp->latitude, temp->longitude);
+      fprintf(saida, "%.5f,%.5f ", latitude, longitude);
     }
-    temp = temp->proximo;
+    temp = local_getProximo(temp);
     contador++;
   }
   fprintf(saida, "\n[/map]");
@@ -58,12 +66,10 @@ void processarArquivo(Grafo caminho, char *arquivoEntrada, Local listaLocais,
   int ids[1024]; 
   int n_ids = 0;
   char linha[256];
-
   if (!arquivo) {
     printf("Não foi possível abrir o arquivo: %s\n", arquivoEntrada);
     return;
   }
-
   while (fgets(linha, sizeof(linha), arquivo)) {
     if (linha[0] != '#' && linha[0] != '\n') {
       linha[strcspn(linha, "\n")] =
@@ -74,12 +80,15 @@ void processarArquivo(Grafo caminho, char *arquivoEntrada, Local listaLocais,
       }
     }
   }
-
   fclose(arquivo);
-
   Visita visitaFinal = dijkstraAdaptado(caminho, ids, n_ids);
-  Local novaLista = criarListaPorIds(listaLocais, visitaFinal.caminho, visitaFinal.tamanho);
+  int *cam;
+  int tamanho;
+  info_visita(visitaFinal, &cam, &tamanho);
+  Local novaLista = criarListaPorIds(listaLocais, cam, tamanho);
   escreverBBMapCode(novaLista, arquivoSaida);
+  
+
 }
 
 // Função principal do programa que realiza a leitura dos arquivos, cria o grafo de caminhos, processa o arquivo de visita e gera o código BBMap

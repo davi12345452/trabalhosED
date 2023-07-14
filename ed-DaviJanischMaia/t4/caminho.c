@@ -56,10 +56,10 @@ Grafo caminho_cria(char *arquivo, Local locais) {
       continue;
     }
 
-    double distancia = calcula_distancia(local_origem->latitude, local_origem->longitude,
-                                         local_destino->latitude, local_destino->longitude);
+    double distancia = calcula_distancia(local_getLatitude(local_origem), local_getLongitude(local_origem),
+                                         local_getLatitude(local_destino), local_getLongitude(local_destino));
 
-    g_ins_aresta(caminho, local_origem->id, local_destino->id, distancia);
+    g_ins_aresta(caminho, local_getId(local_origem), local_getId(local_destino), distancia);
   }
 
   fclose(file);

@@ -3,7 +3,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-// static int id_counter = 0;
+
+// Definição da estrutura _local que representa um local
+struct _local {
+    int id;                 
+    char codigo[5];         
+    double latitude;       
+    double longitude;       
+    char* descricao;        
+    struct _local* proximo;
+};
+
 
 Local criarLocal(int id, char *codigo, double latitude, double longitude,
                  char *descricao) {
@@ -100,6 +110,7 @@ Local lerLocaisDoArquivo(char *nomeArquivo) {
   return lista;
 }
 
+// Função para procurar local pelo código - Manipulação posterior do Dijkstra
 Local local_procura(Local lista, char *cod) {
   Local atual = lista;
   while (atual != NULL) {
@@ -111,6 +122,7 @@ Local local_procura(Local lista, char *cod) {
   return NULL;
 }
 
+// Função para procurar local pelo Id - Manipulação posterior do Dijkstra
 Local local_procura_id(Local local, int id) {
   Local cursor = local;
   while (cursor != NULL) {
@@ -122,15 +134,22 @@ Local local_procura_id(Local local, int id) {
   return NULL;
 }
 
-int estaNoArray(int numero, int *array, int tamanho) {
-  for (int i = 0; i < tamanho; i++) {
-    if (array[i] == numero) {
-      return 1;
+// Função que busca um local pelo código, devolvendo o ID - Preencher o grafo com ID ao invés de codigo char*
+int buscaLocalID(Local lista, char *codigo) {
+  Local temp = lista;
+
+  while (temp) {
+    if (strcmp(temp->codigo, codigo) == 0) {
+      return temp->id;
     }
+    temp = temp->proximo;
   }
-  return 0;
+
+  return -1;
 }
 
+
+// Função para imprimir os locais de lista, mais para testes mesmo
 void imprimirLocais(Local lista) {
   Local atual = lista;
   while (atual != NULL) {
@@ -144,6 +163,7 @@ void imprimirLocais(Local lista) {
   }
 }
 
+// Recebe uma lista de IDs e cria uma lista de Locais
 Local criarListaPorIds(Local lista, int *ids, int tamanho) {
   Local novaLista = NULL;
   for (int i = 0; i < tamanho; i++) {
@@ -157,15 +177,50 @@ Local criarListaPorIds(Local lista, int *ids, int tamanho) {
   return novaLista;
 }
 
-int buscaLocalID(Local lista, char *codigo) {
-  Local temp = lista;
 
-  while (temp) {
-    if (strcmp(temp->codigo, codigo) == 0) {
-      return temp->id;
+
+/*
+  As funções abaixo são para o acesso de informações das estruturas, sem que o TAD seja quebrado. Aqui há
+  funções para devolver descrição, longitude, latitude e id de um local, bem como o próximo da lista. Foi
+  a maneira que eu encontrei de deixar os TADs encapsulados, porém fornecendo o acesso de informações em 
+  determinadas chamadas. 
+*/
+
+char* local_getDescricao(Local local){
+    if(local == NULL){
+        return "";
     }
-    temp = temp->proximo;
-  }
+    return local->descricao;
+}
 
-  return -1;
+
+double local_getLatitude(Local local) {
+    if (local == NULL) {
+        return -1;
+    }
+
+    return local->latitude;
+}
+
+double local_getLongitude(Local local) {
+    if (local == NULL) {
+        return -1;
+    }
+
+    return local->longitude;
+}
+
+int local_getId(Local local) {
+    if (local == NULL) {
+        return -1;
+    }
+
+    return local->id;
+}
+
+Local local_getProximo(Local local) {
+    if (local == NULL) {
+        return NULL;
+    }
+    return local->proximo;
 }
