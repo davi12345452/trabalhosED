@@ -37,8 +37,8 @@ void escreverBBMapCode(Local lista, char *arquivoSaida) {
       }
     }
     else if (temp->descricao && temp->descricao[0] != '\0') {
-      fprintf(saida, "%.5f,%.5f ", temp->latitude, temp->longitude);
-      fprintf(saida, "\n%.5f,%.5f(%s)\n", temp->latitude, temp->longitude,
+      fprintf(saida, "%.5f,%.5f;", temp->latitude, temp->longitude);
+      fprintf(saida, "\n%.5f,%.5f(%s);\n", temp->latitude, temp->longitude,
               temp->descricao);
       fprintf(saida, "%.5f,%.5f ", temp->latitude, temp->longitude);
     } else {
